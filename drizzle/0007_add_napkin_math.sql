@@ -1,0 +1,1 @@
+ALTER TABLE `questions` ADD `napkin_math` text DEFAULT '' NOT NULL;
