@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getD1Database } from "@/db";
 import { getPublicResult } from "@/db/public-results";
@@ -37,7 +38,7 @@ export default async function PublicResultPage(
   const date = new Intl.DateTimeFormat("ro-RO", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${result.publishDate}T12:00:00Z`));
 
   return <main className="public-result-shell"><AnalyticsEvent event="public_result_viewed" /><section className="public-result-card">
-    <header><Link href="/" className="public-brand">OCHIOMETRIC<small>ESTIMĂRI ZILNICE</small></Link></header>
+    <header><Link href="/" className="public-brand" aria-label="Ochiometric — pagina principală"><Image className="brand-logo" src="/ochiometric-logo.png" width={869} height={209} alt="Ochiometric" priority /></Link></header>
     <span className="eyebrow">REZULTAT PUBLIC · NR. {String(result.edition).padStart(3, "0")}</span>
     <p className="public-date">{date}</p>
     <div className="big-score">{scoreFmt(result.score)}</div>

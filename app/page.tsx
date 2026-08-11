@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
+import Image from "next/image";
 import { sendMetric } from "./analytics-event";
 import { formatDisplayNumber, formatGroupedInteger, guessSizeClass, parseGroupedInteger } from "./number-format";
 
@@ -48,7 +49,7 @@ function Distribution({ score, bins }: { score: number; bins: number[] }) {
 }
 
 function Header({ onMenu, onBack, back = false }: { onMenu: () => void; onBack: () => void; back?: boolean }) {
-  return <header className="topbar"><button className="round coral" onClick={onMenu} aria-label="Deschide meniul">☰</button>{back && <button className="round" onClick={onBack} aria-label="Înapoi">‹</button>}<div className="brand"><b>OCHIOMETRIC</b><small>ESTIMĂRI ZILNICE</small></div><span className="round-slot" aria-hidden="true" /></header>;
+  return <header className={`topbar ${back ? "has-back" : ""}`}><button className="round coral" onClick={onMenu} aria-label="Deschide meniul">☰</button>{back && <button className="round" onClick={onBack} aria-label="Înapoi">‹</button>}<div className="brand"><Image className="brand-logo" src="/ochiometric-logo.png" width={869} height={209} alt="Ochiometric" priority /></div><span className="round-slot" aria-hidden="true" /></header>;
 }
 
 export default function Home() {
