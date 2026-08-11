@@ -78,6 +78,27 @@
       "when": 1786483000000,
       "tag": "0010_refine_today_napkin",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1786484000000,
+      "tag": "0011_public_results",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1786485000000,
+      "tag": "0012_admin_workspace",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1786486000000,
+      "tag": "0013_analytics_rate_limits",
+      "breakpoints": true
     }
   ]
 }

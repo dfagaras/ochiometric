@@ -19,11 +19,14 @@ import { getPublishedPuzzleByDate } from "../db/puzzles.ts";
 
 const migrations = [
   "../drizzle/0000_supreme_thunderball.sql",
-  "../drizzle/0001_*.sql",
-  "../drizzle/0002_*.sql",
-  "../drizzle/0003_*.sql",
-  "../drizzle/0005_*.sql",
-  "../drizzle/0007_*.sql",
+  "../drizzle/0001_ordinary_paibok.sql",
+  "../drizzle/0002_smooth_sheva_callister.sql",
+  "../drizzle/0003_polite_blink.sql",
+  "../drizzle/0005_add_question_sources.sql",
+  "../drizzle/0007_add_napkin_math.sql",
+  "../drizzle/0011_public_results.sql",
+  "../drizzle/0012_admin_workspace.sql",
+  "../drizzle/0013_analytics_rate_limits.sql",
 ];
 
 async function migrationSql(pattern) {
