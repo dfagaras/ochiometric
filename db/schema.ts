@@ -54,6 +54,9 @@ export const questions = sqliteTable(
     answer: real("answer").notNull(),
     unit: text("unit").notNull(),
     explanation: text("explanation").notNull(),
+    sourceLabel: text("source_label").notNull().default(""),
+    sourceUrl: text("source_url").notNull().default(""),
+    napkinMath: text("napkin_math").notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
@@ -82,7 +85,6 @@ export const anonymousPlayers = sqliteTable("anonymous_players", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   lastSeenAt: text("last_seen_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
-
 export const attempts = sqliteTable(
   "attempts",
   {
