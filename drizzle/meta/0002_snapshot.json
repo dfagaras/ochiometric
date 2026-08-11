@@ -1,0 +1,407 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "a38ad16c-51d9-444b-88fa-baeaa72e519e",
+  "prevId": "2675c949-dfbc-4bf4-858c-95f23b243136",
+  "tables": {
+    "anonymous_players": {
+      "name": "anonymous_players",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "attempts": {
+      "name": "attempts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "player_id": {
+          "name": "player_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "puzzle_id": {
+          "name": "puzzle_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "score": {
+          "name": "score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "attempts_player_puzzle_unique": {
+          "name": "attempts_player_puzzle_unique",
+          "columns": [
+            "player_id",
+            "puzzle_id"
+          ],
+          "isUnique": true
+        },
+        "attempts_puzzle_idx": {
+          "name": "attempts_puzzle_idx",
+          "columns": [
+            "puzzle_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "attempts_player_id_anonymous_players_id_fk": {
+          "name": "attempts_player_id_anonymous_players_id_fk",
+          "tableFrom": "attempts",
+          "tableTo": "anonymous_players",
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "attempts_puzzle_id_puzzles_id_fk": {
+          "name": "attempts_puzzle_id_puzzles_id_fk",
+          "tableFrom": "attempts",
+          "tableTo": "puzzles",
+          "columnsFrom": [
+            "puzzle_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "attempts_completion_valid": {
+          "name": "attempts_completion_valid",
+          "value": "(\"attempts\".\"completed_at\" IS NULL AND \"attempts\".\"score\" IS NULL) OR (\"attempts\".\"completed_at\" IS NOT NULL AND \"attempts\".\"score\" >= 1)"
+        }
+      }
+    },
+    "puzzles": {
+      "name": "puzzles",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "edition": {
+          "name": "edition",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "publish_date": {
+          "name": "publish_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'draft'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "puzzles_edition_unique": {
+          "name": "puzzles_edition_unique",
+          "columns": [
+            "edition"
+          ],
+          "isUnique": true
+        },
+        "puzzles_publish_date_unique": {
+          "name": "puzzles_publish_date_unique",
+          "columns": [
+            "publish_date"
+          ],
+          "isUnique": true
+        },
+        "puzzles_status_publish_date_idx": {
+          "name": "puzzles_status_publish_date_idx",
+          "columns": [
+            "status",
+            "publish_date"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "puzzles_edition_positive": {
+          "name": "puzzles_edition_positive",
+          "value": "\"puzzles\".\"edition\" > 0"
+        },
+        "puzzles_publish_date_iso": {
+          "name": "puzzles_publish_date_iso",
+          "value": "strftime('%Y-%m-%d', \"puzzles\".\"publish_date\") IS NOT NULL AND \"puzzles\".\"publish_date\" = strftime('%Y-%m-%d', \"puzzles\".\"publish_date\")"
+        },
+        "puzzles_status_valid": {
+          "name": "puzzles_status_valid",
+          "value": "\"puzzles\".\"status\" IN ('draft', 'scheduled', 'published', 'archived')"
+        }
+      }
+    },
+    "questions": {
+      "name": "questions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "puzzle_id": {
+          "name": "puzzle_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "prompt": {
+          "name": "prompt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "answer": {
+          "name": "answer",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "unit": {
+          "name": "unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "explanation": {
+          "name": "explanation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "questions_puzzle_position_unique": {
+          "name": "questions_puzzle_position_unique",
+          "columns": [
+            "puzzle_id",
+            "position"
+          ],
+          "isUnique": true
+        },
+        "questions_puzzle_idx": {
+          "name": "questions_puzzle_idx",
+          "columns": [
+            "puzzle_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "questions_puzzle_id_puzzles_id_fk": {
+          "name": "questions_puzzle_id_puzzles_id_fk",
+          "tableFrom": "questions",
+          "tableTo": "puzzles",
+          "columnsFrom": [
+            "puzzle_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "questions_position_valid": {
+          "name": "questions_position_valid",
+          "value": "\"questions\".\"position\" BETWEEN 1 AND 3"
+        },
+        "questions_answer_positive": {
+          "name": "questions_answer_positive",
+          "value": "\"questions\".\"answer\" > 0"
+        },
+        "questions_prompt_not_empty": {
+          "name": "questions_prompt_not_empty",
+          "value": "length(trim(\"questions\".\"prompt\")) > 0"
+        },
+        "questions_unit_not_empty": {
+          "name": "questions_unit_not_empty",
+          "value": "length(trim(\"questions\".\"unit\")) > 0"
+        },
+        "questions_explanation_not_empty": {
+          "name": "questions_explanation_not_empty",
+          "value": "length(trim(\"questions\".\"explanation\")) > 0"
+        }
+      }
+    },
+    "results": {
+      "name": "results",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "day": {
+          "name": "day",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "score": {
+          "name": "score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
