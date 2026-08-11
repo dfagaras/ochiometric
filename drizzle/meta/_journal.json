@@ -71,6 +71,13 @@
       "when": 1786482200000,
       "tag": "0009_today_napkin_guides",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1786483000000,
+      "tag": "0010_refine_today_napkin",
+      "breakpoints": true
     }
   ]
 }
