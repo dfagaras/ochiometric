@@ -122,20 +122,27 @@ export default function Home() {
   }
 
   async function startPuzzle(edition?: number) {
-    setQ(0); setInput(""); setReveals([]); setPuzzle(null); setStatistics(null); setPublicResultId(null); setRevealed(false); setGameError(""); setView("play"); setBusy(true);
+    const cachedPuzzle = edition === undefined ? todayPuzzle : null;
+    setQ(0); setInput(""); setReveals([]); setPuzzle(cachedPuzzle); setStatistics(null); setPublicResultId(null); setRevealed(false); setGameError(""); setBusy(true);
+    if (cachedPuzzle) setView("play");
     try {
-      const attemptResponse = await fetch("/api/attempts", { method: "POST", headers: { "content-type": "application/json" }, body: edition === undefined ? undefined : JSON.stringify({ edition }) });
+      const attemptRequest = fetch("/api/attempts", { method: "POST", headers: { "content-type": "application/json" }, body: edition === undefined ? undefined : JSON.stringify({ edition }) });
+      const puzzleRequest = cachedPuzzle
+        ? Promise.resolve(null)
+        : fetch(`/api/puzzles/${edition}`);
+      const [attemptResponse, puzzleResponse] = await Promise.all([attemptRequest, puzzleRequest]);
       const attemptData = await attemptResponse.json() as { attempt?: { edition: number; completedAt: string | null; publicResultId: string | null; answers: Array<Omit<Reveal, "completed" | "score" | "publicResultId">> }; error?: string };
       if (!attemptResponse.ok || !attemptData.attempt) throw new Error(attemptData.error || "Jocul nu este disponibil.");
-      const response = await fetch(`/api/puzzles/${attemptData.attempt.edition}`);
-      const data = await response.json() as { puzzle?: Puzzle; error?: string };
-      if (!response.ok || !data.puzzle) throw new Error(data.error || "Jocul nu a putut fi încărcat.");
+      const data = cachedPuzzle
+        ? { puzzle: cachedPuzzle }
+        : await puzzleResponse!.json() as { puzzle?: Puzzle; error?: string };
+      if ((!cachedPuzzle && !puzzleResponse!.ok) || !data.puzzle) throw new Error(data.error || "Jocul nu a putut fi încărcat.");
       const saved = attemptData.attempt.answers.map((answer) => ({ ...answer, completed: false, score: null, publicResultId: null }));
       setPuzzle(data.puzzle); setReveals(saved); setPublicResultId(attemptData.attempt.publicResultId);
       if (!attemptData.attempt.completedAt && saved.length === 0) sendMetric("game_started");
       if (attemptData.attempt.completedAt) { setView("result"); await loadStatistics(data.puzzle.edition); }
-      else { setQ(saved.length); setRevealed(false); }
-    } catch (error) { setGameError(error instanceof Error ? error.message : "A apărut o eroare."); } finally { setBusy(false); }
+      else { setQ(saved.length); setRevealed(false); setView("play"); }
+    } catch (error) { setPuzzle(null); setView("play"); setGameError(error instanceof Error ? error.message : "A apărut o eroare."); } finally { setBusy(false); }
   }
 
   async function share() {

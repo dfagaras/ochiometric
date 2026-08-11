@@ -19,3 +19,10 @@ test("afișează calculul tabelar și păstrează rezultatul în tema neutră", 
   assert.match(css, /\.results\{[^}]*background:var\(--paper\)/);
   assert.match(css, /\.results::before/);
 });
+
+test("afișează prima întrebare imediat din puzzle-ul deja încărcat", () => {
+  assert.match(page, /const cachedPuzzle = edition === undefined \? todayPuzzle : null/);
+  assert.match(page, /setPuzzle\(cachedPuzzle\)/);
+  assert.match(page, /if \(cachedPuzzle\) setView\("play"\)/);
+  assert.match(page, /Promise\.all\(\[attemptRequest, puzzleRequest\]\)/);
+});
