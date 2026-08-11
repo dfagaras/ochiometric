@@ -63,3 +63,17 @@
   .public-result-card .public-brand .brand-logo{width:200px}
   .admin-header .public-brand .brand-logo{width:154px}
 }
+
+/* Result score: keep the multiplier separate and fit long values on mobile. */
+.big-score.score-value{display:flex;align-items:baseline;gap:clamp(8px,.1em,14px);width:100%;max-width:100%;white-space:nowrap;overflow:visible;font-size:112px;letter-spacing:0}
+.score-value .score-digits{min-width:0;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.score-value .score-times{flex:0 0 auto;font-size:.7em;line-height:1;letter-spacing:0;transform:translateY(-.025em)}
+.big-score.score-value.big-score-medium{font-size:98px}
+.big-score.score-value.big-score-long{font-size:80px}
+.big-score.score-value.big-score-xlong{font-size:66px}
+@media(max-width:600px){
+  .big-score.score-value{font-size:88px}
+  .big-score.score-value.big-score-medium{font-size:72px}
+  .big-score.score-value.big-score-long{font-size:54px}
+  .big-score.score-value.big-score-xlong{font-size:44px}
+}

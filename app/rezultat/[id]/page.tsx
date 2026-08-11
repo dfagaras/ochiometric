@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getD1Database } from "@/db";
 import { getPublicResult } from "@/db/public-results";
 import AnalyticsEvent from "@/app/analytics-event";
+import { ScoreValue } from "@/app/score-value";
 
 function scoreFmt(score: number) {
   return `${score < 10 ? score.toFixed(2) : score.toFixed(1)}×`;
@@ -41,7 +42,7 @@ export default async function PublicResultPage(
     <header><Link href="/" className="public-brand" aria-label="Ochiometric — pagina principală"><Image className="brand-logo" src="/ochiometric-logo.png" width={869} height={209} alt="Ochiometric" priority /></Link></header>
     <span className="eyebrow">REZULTAT PUBLIC · NR. {String(result.edition).padStart(3, "0")}</span>
     <p className="public-date">{date}</p>
-    <div className="big-score">{scoreFmt(result.score)}</div>
+    <ScoreValue score={result.score} />
     <b className="rank">TOP {result.topPercent}%</b>
     <p>{result.participantCount === 1 ? "Primul rezultat al acestei ediții." : `Comparat cu ${result.participantCount} rezultate finalizate.`}</p>
     <h1>Poți estima mai bine?</h1>
