@@ -29,6 +29,13 @@
       "when": 1786476660319,
       "tag": "0003_polite_blink",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1786480909644,
+      "tag": "0004_publish_2026_08_11",
+      "breakpoints": true
     }
   ]
 }
