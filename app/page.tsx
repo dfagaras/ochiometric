@@ -20,6 +20,33 @@ function dateFmt(date: string, long = false) {
   return new Intl.DateTimeFormat("ro-RO", { ...(long ? { day: "numeric", month: "long", year: "numeric" } : { day: "numeric", month: "short", weekday: "short" }), timeZone: "Europe/Bucharest" }).format(new Date(`${date}T12:00:00Z`));
 }
 
+async function createShareImage(publicResultId: string, edition: number): Promise<File> {
+  const response = await fetch(`/api/results/${publicResultId}/card`);
+  if (!response.ok) throw new Error("Cardul rezultatului nu a putut fi generat.");
+  const svg = await response.blob();
+  const objectUrl = URL.createObjectURL(svg);
+  try {
+    const image = new window.Image();
+    image.decoding = "async";
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error("Cardul rezultatului nu a putut fi afișat."));
+      image.src = objectUrl;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    canvas.height = 630;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Imaginea nu a putut fi pregătită.");
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const png = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png", 0.96));
+    if (!png) throw new Error("Imaginea nu a putut fi salvată.");
+    return new File([png], `ochiometric-${editionFmt(edition)}.png`, { type: "image/png" });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 function CalculationGuide({ value, sourceLabel, sourceUrl }: { value: string; sourceLabel: string; sourceUrl: string }) {
   const steps = value.split("||").filter(Boolean);
   const intro = steps[0];
@@ -68,6 +95,7 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [publicResultId, setPublicResultId] = useState<string | null>(null);
+  const [shareStatus, setShareStatus] = useState("");
 
   useEffect(() => {
     sendMetric("app_open");
@@ -148,12 +176,39 @@ export default function Home() {
 
   async function share() {
     if (!puzzle) return;
-    if (!publicResultId) { setGameError("Linkul public nu este încă disponibil."); return; }
+    if (!publicResultId) { setShareStatus("Rezultatul public nu este încă disponibil."); return; }
     const url = `${window.location.origin}/rezultat/${publicResultId}`;
     sendMetric("share_opened");
     const text = `Ochiometric #${editionFmt(puzzle.edition)} — ${scoreFmt(statistics?.playerScore ?? dailyScore)}${percentile ? ` · Top ${percentile}%` : ""}\nMă bați?`;
-    if (navigator.share) await navigator.share({ title: "Ochiometric", text, url });
-    else await navigator.clipboard.writeText(`${text}\n${url}`);
+    setShareStatus("Se pregătește imaginea…");
+    try {
+      const file = await createShareImage(publicResultId, puzzle.edition);
+      const imageShare: ShareData = { title: "Ochiometric", text: `${text}\n${url}`, files: [file] };
+      if (navigator.share && (!navigator.canShare || navigator.canShare(imageShare))) {
+        await navigator.share(imageShare);
+        setShareStatus("");
+      } else if (navigator.share) {
+        await navigator.share({ title: "Ochiometric", text, url });
+        setShareStatus("");
+      } else {
+        const downloadUrl = URL.createObjectURL(file);
+        const anchor = document.createElement("a");
+        anchor.href = downloadUrl;
+        anchor.download = file.name;
+        anchor.click();
+        URL.revokeObjectURL(downloadUrl);
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        setShareStatus("Imaginea a fost descărcată, iar linkul a fost copiat.");
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") { setShareStatus(""); return; }
+      try {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        setShareStatus("Nu am putut deschide imaginea. Linkul rezultatului a fost copiat.");
+      } catch {
+        setShareStatus(error instanceof Error ? error.message : "Distribuirea nu a putut fi pornită.");
+      }
+    }
   }
 
   const startPuzzleFromSharedResult = useEffectEvent((edition: number) => {
@@ -179,9 +234,9 @@ export default function Home() {
 
     {view === "play" && <><Header onMenu={() => setMenu(true)} onBack={() => setView("home")} back /><section className="play-card card">{gameError && <p role="alert" className="error-message">{gameError}</p>}{!currentQuestion ? <p>{busy ? "Se încarcă jocul…" : "Jocul nu este disponibil."}</p> : <><div className="progress"><span>NR. {editionFmt(puzzle.edition)} · ÎNTREBAREA {q + 1} DIN {puzzle.questions.length}</span><div><i style={{ width: `${((q + (revealed ? 1 : 0)) / puzzle.questions.length) * 100}%` }} /></div></div><h2>{currentQuestion.prompt}</h2>{!revealed ? <><label htmlFor="guess">ESTIMAREA TA</label><div className="guess"><input id="guess" className={guessSizeClass(input)} inputMode="numeric" autoComplete="off" value={input} onChange={(event) => setInput(formatGroupedInteger(event.target.value))} onKeyDown={(event) => event.key === "Enter" && void submit()} placeholder="0" autoFocus aria-describedby="guess-help" /><span>{currentQuestion.unit}</span></div><p className="micro" id="guess-help">Nu căuta. Ai încredere în instinct.</p><button className="primary" disabled={busy} onClick={() => void submit()}>{busy ? "SE BLOCHEAZĂ…" : "BLOCHEAZĂ RĂSPUNSUL"}</button></> : <div className="reveal"><div className="compare"><article><small>AI SPUS</small><b>{fmt(reveals[q].guess)}</b></article><article><small>RĂSPUNS</small><b>{fmt(reveals[q].answer)}</b></article></div><div className="factor"><b>{scoreFmt(reveals[q].factor)}</b><span>{reveals[q].guess === reveals[q].answer ? "PERFECT =" : reveals[q].guess > reveals[q].answer ? "PREA MULT ↑" : "PREA PUȚIN ↓"}</span></div><p className="answer-note">{reveals[q].explanation}</p>{reveals[q].napkinMath && <CalculationGuide value={reveals[q].napkinMath} sourceLabel={reveals[q].sourceLabel} sourceUrl={reveals[q].sourceUrl} />}<button className="primary" onClick={next}>{q < puzzle.questions.length - 1 ? "URMĂTOAREA ÎNTREBARE" : "VEZI SCORUL"} →</button></div>}</>}</section></>}
 
-    {view === "result" && <><Header onMenu={() => setMenu(true)} onBack={() => setView("home")} back /><section className="results card"><span className="eyebrow">OCHIOMETRIC NR. {puzzle ? editionFmt(puzzle.edition) : "—"}</span><div className="big-score">{scoreFmt(statistics?.playerScore ?? dailyScore)}</div>{percentile && <b className="rank">TOP {percentile}%</b>}<h3>CUM S-AU DESCURCAT TOȚI</h3>{statistics ? <><Distribution score={statistics.playerScore} bins={statistics.bins} /><p>{statistics.participantCount === 1 ? "Ești primul rezultat pentru acest joc." : `${statistics.participantCount} jucători au terminat acest joc.`}</p></> : <p>Se încarcă distribuția reală…</p>}<h3>ÎNTREBĂRI</h3><div className="question-results">{puzzle?.questions.map((question, index) => <article key={question.position}><p>{question.prompt}</p><b>{reveals[index].guess === reveals[index].answer ? "=" : reveals[index].guess > reveals[index].answer ? ">" : "<"} {scoreFmt(reveals[index].factor)}</b></article>)}</div><button className="primary dark" onClick={() => void share()}>DISTRIBUIE REZULTATUL</button><button className="secondary" onClick={() => void openArchive()}>VEZI ARHIVA</button></section></>}
+    {view === "result" && <><Header onMenu={() => setMenu(true)} onBack={() => setView("home")} back /><section className="results card"><span className="eyebrow">OCHIOMETRIC NR. {puzzle ? editionFmt(puzzle.edition) : "—"}</span><div className="big-score">{scoreFmt(statistics?.playerScore ?? dailyScore)}</div>{percentile && <b className="rank">TOP {percentile}%</b>}<h3>CUM S-AU DESCURCAT TOȚI</h3>{statistics ? <><Distribution score={statistics.playerScore} bins={statistics.bins} /><p>{statistics.participantCount === 1 ? "Ești primul rezultat pentru acest joc." : `${statistics.participantCount} jucători au terminat acest joc.`}</p></> : <p>Se încarcă distribuția reală…</p>}<h3>ÎNTREBĂRI</h3><div className="question-results">{puzzle?.questions.map((question, index) => <article key={question.position}><p>{question.prompt}</p><b>{reveals[index].guess === reveals[index].answer ? "=" : reveals[index].guess > reveals[index].answer ? ">" : "<"} {scoreFmt(reveals[index].factor)}</b></article>)}</div><button className="primary dark" disabled={shareStatus === "Se pregătește imaginea…"} onClick={() => void share()}>{shareStatus === "Se pregătește imaginea…" ? "SE PREGĂTEȘTE IMAGINEA…" : "DISTRIBUIE CA IMAGINE"}</button>{shareStatus && shareStatus !== "Se pregătește imaginea…" && <p className="share-status" role="status">{shareStatus}</p>}<button className="secondary" onClick={() => void openArchive()}>VEZI ARHIVA</button></section></>}
 
-    {view === "archive" && <><Header onMenu={() => setMenu(true)} onBack={() => setView("home")} back /><section className="archive"><span className="eyebrow">ISTORICUL TĂU</span><h1>Arhivă</h1><p>Toate provocările Ochiometric publicate până astăzi.</p>{archiveError && <p role="alert" className="error-message">{archiveError}</p>}<div className="stats"><article><small>JOCURI</small><b>{completedArchive.length} / {archive.length}</b></article><article><small>SCOR MEDIU</small><b>{completedArchive.length ? scoreFmt(completedArchive.reduce((sum, item) => sum + (item.score ?? 0), 0) / completedArchive.length) : "—"}</b></article><article><small>CEA MAI BUNĂ ZI</small><b>{completedArchive.length ? scoreFmt(Math.min(...completedArchive.map((item) => item.score ?? Infinity))) : "—"}</b></article></div><div className="filters" aria-label="Filtrează arhiva">{([["all", "TOATE"], ["completed", "TERMINATE"], ["available", "DE JUCAT"]] as const).map(([value, label]) => <button key={value} className={archiveFilter === value ? "active" : ""} aria-pressed={archiveFilter === value} onClick={() => setArchiveFilter(value)}>{label}</button>)}</div><div className="archive-list" aria-live="polite">{busy && archive.length === 0 ? <p className="archive-empty">Se încarcă arhiva…</p> : filteredArchive.length === 0 ? <p className="archive-empty">Nu există jocuri în această categorie.</p> : filteredArchive.map((item) => <article key={item.edition}><small>{editionFmt(item.edition)}</small><div><b>{dateFmt(item.publishDate)}</b><span>{item.completedAt ? "Joc terminat" : item.answerCount ? `${item.answerCount}/3 răspunsuri` : "Disponibil"}</span></div><strong className={item.completedAt ? "good" : ""}>{item.score ? scoreFmt(item.score) : "—"}</strong><button onClick={() => void startPuzzle(item.edition)}>{item.completedAt ? "REZULTAT" : item.answerCount ? "CONTINUĂ" : "JOACĂ"}</button></article>)}</div></section></>}
+    {view === "archive" && <><Header onMenu={() => setMenu(true)} onBack={() => setView("home")} back /><section className="archive"><span className="eyebrow">ISTORICUL TĂU</span><h1>Arhivă</h1><p>Toate provocările Ochiometric publicate până astăzi.</p>{archiveError && <p role="alert" className="error-message">{archiveError}</p>}<div className="stats"><article><small>JOCURI</small><b>{completedArchive.length} / {archive.length}</b></article><article><small>SCOR MEDIU</small><b>{completedArchive.length ? scoreFmt(completedArchive.reduce((sum, item) => sum + (item.score ?? 0), 0) / completedArchive.length) : "—"}</b></article><article><small>CEA MAI BUNĂ ZI</small><b>{completedArchive.length ? scoreFmt(Math.min(...completedArchive.map((item) => item.score ?? Infinity))) : "—"}</b></article></div><div className="filters" aria-label="Filtrează arhiva">{([["all", "TOATE"], ["completed", "TERMINATE"], ["available", "DE JUCAT"]] as const).map(([value, label]) => <button key={value} className={archiveFilter === value ? "active" : ""} aria-pressed={archiveFilter === value} onClick={() => setArchiveFilter(value)}>{label}</button>)}</div><div className="archive-columns" aria-hidden="true"><span>NR.</span><span>DATĂ</span><span>SCOR</span><span>STATUS</span></div><div className="archive-list" aria-live="polite">{busy && archive.length === 0 ? <p className="archive-empty">Se încarcă arhiva…</p> : filteredArchive.length === 0 ? <p className="archive-empty">Nu există jocuri în această categorie.</p> : filteredArchive.map((item) => <article key={item.edition}><small>{editionFmt(item.edition)}</small><div><b>{dateFmt(item.publishDate)}</b><span>{item.completedAt ? "Joc terminat" : item.answerCount ? `${item.answerCount}/3 răspunsuri` : "Disponibil"}</span></div><strong className={item.completedAt ? "good" : ""}>{item.score ? scoreFmt(item.score) : "—"}</strong><button className={item.completedAt ? "completed" : item.answerCount ? "partial" : "available"} onClick={() => void startPuzzle(item.edition)}>{item.completedAt ? "COMPLET ✓" : item.answerCount ? "CONTINUĂ" : "JOACĂ"}</button></article>)}</div></section></>}
 
     {view === "about" && <><Header onMenu={() => setMenu(true)} onBack={() => setView("home")} back /><section className="about card"><span className="eyebrow">DESPRE</span><h1>Ce înseamnă<br />„Ochiometric”?</h1><p>Este jocul zilnic în care nu contează dacă știi răspunsul, ci cât de bine poți construi o estimare.</p><p>Primești trei întrebări greu de știut exact și o singură încercare pentru fiecare. Scorul perfect este 1×. Cu cât scorul e mai mic, cu atât ai fost mai aproape.</p><button className="primary" onClick={() => void startPuzzle()}>JOACĂ AZI</button></section></>}
   </main>;

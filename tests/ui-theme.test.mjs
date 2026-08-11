@@ -26,3 +26,10 @@ test("afișează prima întrebare imediat din puzzle-ul deja încărcat", () => 
   assert.match(page, /if \(cachedPuzzle\) setView\("play"\)/);
   assert.match(page, /Promise\.all\(\[attemptRequest, puzzleRequest\]\)/);
 });
+
+test("arhiva are coloane explicite și rezultatul se distribuie ca imagine", () => {
+  assert.match(page, /<span>NR\.<\/span><span>DATĂ<\/span><span>SCOR<\/span><span>STATUS<\/span>/);
+  assert.match(page, /new File\(\[png\]/);
+  assert.match(page, /navigator\.canShare\(imageShare\)/);
+  assert.match(page, /DISTRIBUIE CA IMAGINE/);
+});
