@@ -4,6 +4,7 @@ type AttemptRow = {
   started_at: string;
   completed_at: string | null;
   score: number | null;
+  public_id: string | null;
 };
 
 type D1Statement = {
@@ -42,11 +43,32 @@ export async function startOrResumeAttempt(
   playerId: string,
   publishDate: string,
 ): Promise<PublicAttempt | null> {
+  return startOrResumeAttemptForPuzzle(database, playerId, "p.publish_date", publishDate);
+}
+
+export async function startOrResumeAttemptByEdition(
+  database: AttemptDatabase,
+  playerId: string,
+  edition: number,
+): Promise<PublicAttempt | null> {
+  if (!Number.isInteger(edition) || edition < 1) return null;
+  return startOrResumeAttemptForPuzzle(database, playerId, "p.edition", edition);
+}
+
+async function startOrResumeAttemptForPuzzle(
+  database: AttemptDatabase,
+  playerId: string,
+  selector: "p.publish_date" | "p.edition",
+  value: string | number,
+): Promise<PublicAttempt | null> {
+  const playableStatus = selector === "p.edition"
+    ? "p.status IN ('published', 'archived')"
+    : "p.status = 'published'";
   const puzzle = await database
     .prepare(
-      "SELECT id FROM puzzles WHERE publish_date = ? AND status = 'published'",
+      `SELECT p.id FROM puzzles p WHERE ${selector} = ? AND ${playableStatus}`,
     )
-    .bind(publishDate)
+    .bind(value)
     .first<{ id: number }>();
   if (!puzzle) return null;
 
@@ -61,7 +83,7 @@ export async function startOrResumeAttempt(
 
   const attempt = await database
     .prepare(
-      `SELECT p.edition, p.publish_date, a.started_at, a.completed_at, a.score
+      `SELECT p.edition, p.publish_date, a.started_at, a.completed_at, a.score, a.public_id
        FROM attempts a
        JOIN puzzles p ON p.id = a.puzzle_id
        WHERE a.player_id = ? AND a.puzzle_id = ?`,
@@ -78,6 +100,15 @@ export async function startOrResumeAttempt(
         startedAt: attempt.started_at,
         completedAt: attempt.completed_at,
         score: attempt.score,
+        publicResultId: attempt.public_id,
         answers,
       };
+}
+
+export function createPublicResultId(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(18));
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "");
 }

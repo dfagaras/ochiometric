@@ -30,14 +30,35 @@ export async function getPuzzleStatistics(
   playerId: string,
   publishDate: string,
 ): Promise<PuzzleStatistics | null> {
+  return getStatisticsForPuzzle(database, playerId, "p.publish_date", publishDate);
+}
+
+export async function getPuzzleStatisticsByEdition(
+  database: StatisticsDatabase,
+  playerId: string,
+  edition: number,
+): Promise<PuzzleStatistics | null> {
+  if (!Number.isInteger(edition) || edition < 1) return null;
+  return getStatisticsForPuzzle(database, playerId, "p.edition", edition);
+}
+
+async function getStatisticsForPuzzle(
+  database: StatisticsDatabase,
+  playerId: string,
+  selector: "p.publish_date" | "p.edition",
+  value: string | number,
+): Promise<PuzzleStatistics | null> {
+  const visibleStatus = selector === "p.edition"
+    ? "p.status IN ('published', 'archived')"
+    : "p.status = 'published'";
   const player = await database
     .prepare(
       `SELECT a.score
        FROM attempts a JOIN puzzles p ON p.id = a.puzzle_id
-       WHERE a.player_id = ? AND p.publish_date = ?
+       WHERE a.player_id = ? AND ${selector} = ?
          AND a.completed_at IS NOT NULL AND a.score IS NOT NULL`,
     )
-    .bind(playerId, publishDate)
+    .bind(playerId, value)
     .first<ScoreRow>();
   if (!player) return null;
 
@@ -45,10 +66,10 @@ export async function getPuzzleStatistics(
     .prepare(
       `SELECT a.score
        FROM attempts a JOIN puzzles p ON p.id = a.puzzle_id
-       WHERE p.publish_date = ? AND p.status = 'published'
+       WHERE ${selector} = ? AND ${visibleStatus}
          AND a.completed_at IS NOT NULL AND a.score IS NOT NULL`,
     )
-    .bind(publishDate)
+    .bind(value)
     .all<ScoreRow>();
 
   const scores = results.map(({ score }) => score);

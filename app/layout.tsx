@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import PwaRegistration from "./pwa-registration";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,6 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  manifest: "/manifest.webmanifest",
+  themeColor: "#17264a",
+  appleWebApp: { capable: true, title: "Ochiometric", statusBarStyle: "default" },
+  metadataBase: new URL("https://din-ochi.dragosfagaras.chatgpt.site"),
   title: "Ochiometric — Jocul zilnic de estimări",
   description: "Trei întrebări. Fără Google. Cât de aproape ajungi?",
   other: {
@@ -34,7 +39,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <a className="skip-link" href="#main-content">Sari la conținut</a>
+        <div id="main-content">{children}</div>
+        <PwaRegistration />
       </body>
     </html>
   );
