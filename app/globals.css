@@ -36,3 +36,9 @@
 .view-result .bars i{background:color-mix(in srgb,var(--flag-1) 64%,var(--ink))}
 .view-result .rank{background:var(--coral)}
 @media(max-width:600px){.napkin-row{grid-template-columns:1fr;font-size:12px}.napkin-total{grid-template-columns:minmax(0,1fr) auto}.napkin-sheet{padding:20px 18px 2px}.napkin summary{padding:18px}.view-play .play-card,.results{min-height:calc(100vh - 116px)}}
+.guess{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px;overflow:hidden}
+.guess input{min-width:0;width:100%;padding:8px 0 11px;line-height:1;letter-spacing:-.045em;font-size:50px;font-variant-numeric:tabular-nums}
+.guess input:focus,.guess input:focus-visible{outline:0!important;box-shadow:none!important}
+.guess span{white-space:nowrap;padding:0 0 14px;font-size:16px}
+.guess-value-medium{font-size:42px!important}.guess-value-long{font-size:34px!important}.guess-value-xlong{font-size:27px!important}
+@media(max-width:600px){.guess{gap:8px}.guess input{font-size:46px}.guess-value-medium{font-size:36px!important}.guess-value-long{font-size:29px!important}.guess-value-xlong{font-size:22px!important}.guess span{font-size:14px;padding-bottom:13px}}
