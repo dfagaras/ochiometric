@@ -23,7 +23,7 @@ export type PublicAttempt = {
   startedAt: string;
   completedAt: string | null;
   score: number | null;
-  answers: Array<{position:number;guess:number;answer:number;factor:number;explanation:string}>;
+  answers: Array<{position:number;guess:number;answer:number;factor:number;explanation:string;sourceLabel:string;sourceUrl:string;napkinMath:string}>;
 };
 
 export function bucharestDate(now = new Date()): string {
@@ -70,7 +70,8 @@ export async function startOrResumeAttempt(
     .first<AttemptRow>();
 
   if (!attempt) return null;
-  const { results: answers } = await database.prepare(`SELECT q.position,aa.guess,q.answer,aa.factor,q.explanation FROM attempt_answers aa JOIN questions q ON q.id=aa.question_id WHERE aa.attempt_id=(SELECT a.id FROM attempts a JOIN puzzles p ON p.id=a.puzzle_id WHERE a.player_id=? AND p.id=?) ORDER BY q.position`).bind(playerId,puzzle.id).all<{position:number;guess:number;answer:number;factor:number;explanation:string}>();
+  const { results: answerRows } = await database.prepare(`SELECT q.position,aa.guess,q.answer,aa.factor,q.explanation,q.source_label,q.source_url,q.napkin_math FROM attempt_answers aa JOIN questions q ON q.id=aa.question_id WHERE aa.attempt_id=(SELECT a.id FROM attempts a JOIN puzzles p ON p.id=a.puzzle_id WHERE a.player_id=? AND p.id=?) ORDER BY q.position`).bind(playerId,puzzle.id).all<{position:number;guess:number;answer:number;factor:number;explanation:string;source_label:string;source_url:string;napkin_math:string}>();
+  const answers=answerRows.map(({source_label,source_url,napkin_math,...answer})=>({...answer,sourceLabel:source_label,sourceUrl:source_url,napkinMath:napkin_math}));
   return {
         edition: attempt.edition,
         publishDate: attempt.publish_date,
