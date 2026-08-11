@@ -47,7 +47,7 @@ function questionMarkup(result: PublicResult) {
     const tspans = lines.map((line, lineIndex) => `<tspan x="690" dy="${lineIndex ? 27 : 0}">${escapeXml(line)}</tspan>`).join("");
     return `<text x="650" y="${top}" fill="${colors.muted}" font-family="Arial,sans-serif" font-size="17" font-weight="800">Î${question.position}</text>
       <text x="690" y="${top}" fill="${colors.ink}" font-family="Arial,sans-serif" font-size="23" font-weight="700">${tspans}</text>
-      <text x="1128" y="${top}" text-anchor="end" fill="${colors.ink}" font-family="Arial,sans-serif" font-size="25" font-weight="900">${question.relation} ${scoreLabel(question.factor)}</text>
+      <text x="1128" y="${top}" text-anchor="end" fill="${colors.ink}" font-family="Arial,sans-serif" font-size="25" font-weight="900">${escapeXml(question.relation)} ${scoreLabel(question.factor)}</text>
       ${index < result.questions.length - 1 ? `<line x1="650" y1="${top + 95}" x2="1130" y2="${top + 95}" stroke="${colors.ink}" stroke-opacity=".16"/>` : ""}`;
   }).join("");
 }

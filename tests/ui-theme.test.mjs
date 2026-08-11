@@ -4,6 +4,7 @@ import test from "node:test";
 
 const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
 const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+const resultCardRoute = await readFile(new URL("../app/api/results/[id]/card/route.ts", import.meta.url), "utf8");
 
 test("aplică în ordine tema roșu, albastru și galben întrebărilor", () => {
   assert.match(page, /question-\$\{q\+1\}/);
@@ -32,4 +33,9 @@ test("arhiva are coloane explicite și rezultatul se distribuie ca imagine", () 
   assert.match(page, /new File\(\[png\]/);
   assert.match(page, /navigator\.canShare\(imageShare\)/);
   assert.match(page, /DISTRIBUIE CA IMAGINE/);
+});
+
+test("cardul rezultatului escapează comparatorul înainte să genereze SVG-ul", () => {
+  assert.match(resultCardRoute, /escapeXml\(question\.relation\)/);
+  assert.doesNotMatch(resultCardRoute, />\$\{question\.relation\} /);
 });
