@@ -1,8 +1,8 @@
 {
+  "id": "91781ca4-7be0-40a9-abbd-ecea23cfee09",
+  "prevId": "730ffe82-4207-41c2-bd17-2a2bb2a01156",
   "version": "6",
   "dialect": "sqlite",
-  "id": "6f1aa8f2-36ac-4f37-a680-4218e4fdcfea",
-  "prevId": "5d7415e8-c890-4717-8329-9a95b6b5c2ee",
   "tables": {
     "anonymous_players": {
       "name": "anonymous_players",
@@ -98,28 +98,28 @@
         "attempt_answers_attempt_id_attempts_id_fk": {
           "name": "attempt_answers_attempt_id_attempts_id_fk",
           "tableFrom": "attempt_answers",
-          "tableTo": "attempts",
           "columnsFrom": [
             "attempt_id"
           ],
+          "tableTo": "attempts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "attempt_answers_question_id_questions_id_fk": {
           "name": "attempt_answers_question_id_questions_id_fk",
           "tableFrom": "attempt_answers",
-          "tableTo": "questions",
           "columnsFrom": [
             "question_id"
           ],
+          "tableTo": "questions",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -203,28 +203,28 @@
         "attempts_player_id_anonymous_players_id_fk": {
           "name": "attempts_player_id_anonymous_players_id_fk",
           "tableFrom": "attempts",
-          "tableTo": "anonymous_players",
           "columnsFrom": [
             "player_id"
           ],
+          "tableTo": "anonymous_players",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "attempts_puzzle_id_puzzles_id_fk": {
           "name": "attempts_puzzle_id_puzzles_id_fk",
           "tableFrom": "attempts",
-          "tableTo": "puzzles",
           "columnsFrom": [
             "puzzle_id"
           ],
+          "tableTo": "puzzles",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -395,6 +395,14 @@
           "autoincrement": false,
           "default": "''"
         },
+        "napkin_math": {
+          "name": "napkin_math",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
         "created_at": {
           "name": "created_at",
           "type": "text",
@@ -433,15 +441,15 @@
         "questions_puzzle_id_puzzles_id_fk": {
           "name": "questions_puzzle_id_puzzles_id_fk",
           "tableFrom": "questions",
-          "tableTo": "puzzles",
           "columnsFrom": [
             "puzzle_id"
           ],
+          "tableTo": "puzzles",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -511,9 +519,9 @@
   "views": {},
   "enums": {},
   "_meta": {
+    "columns": {},
     "schemas": {},
-    "tables": {},
-    "columns": {}
+    "tables": {}
   },
   "internal": {
     "indexes": {}

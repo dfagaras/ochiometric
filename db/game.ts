@@ -32,15 +32,13 @@ export async function lockAnswerByEdition(db:GameDatabase,playerId:string,editio
 async function lockAnswerForPuzzle(db:GameDatabase,playerId:string,selector:"p.publish_date"|"p.edition",value:string|number,position:number,guess:number){
   if(!Number.isInteger(position)||position<1||position>3)throw new Error("POZITIE_INVALIDA");
   if(!Number.isFinite(guess)||guess<=0||guess>1e15)throw new Error("ESTIMARE_INVALIDA");
-  const playableStatus=selector==="p.edition"?"p.status IN ('published','archived')":"p.status='published'";
-  const row=await db.prepare(`SELECT a.id attempt_id,q.id question_id,q.answer,q.explanation FROM attempts a JOIN puzzles p ON p.id=a.puzzle_id JOIN questions q ON q.puzzle_id=p.id AND q.position=? WHERE a.player_id=? AND ${selector}=? AND ${playableStatus} AND a.completed_at IS NULL`).bind(position,playerId,value).first<{attempt_id:number;question_id:number;answer:number;explanation:string}>();
+  const row=await db.prepare(`SELECT a.id attempt_id,q.id question_id,q.answer,q.explanation,q.source_label,q.source_url,q.napkin_math FROM attempts a JOIN puzzles p ON p.id=a.puzzle_id JOIN questions q ON q.puzzle_id=p.id AND q.position=? WHERE a.player_id=? AND p.publish_date=? AND p.status='published' AND a.completed_at IS NULL`).bind(position,playerId,date).first<{attempt_id:number;question_id:number;answer:number;explanation:string;source_label:string;source_url:string;napkin_math:string}>();
   if(!row)throw new Error("INCERCARE_INDISPONIBILA");
   const factor=scoreFactor(guess,row.answer);
   const inserted=await db.prepare(`INSERT INTO attempt_answers(attempt_id,question_id,guess,factor) SELECT ?,?,?,? WHERE (SELECT count(*) FROM attempt_answers WHERE attempt_id=?)=? ON CONFLICT(attempt_id,question_id) DO NOTHING`).bind(row.attempt_id,row.question_id,guess,factor,row.attempt_id,position-1).run();
   if(!inserted.meta?.changes)throw new Error("RASPUNS_DEJA_BLOCAT");
   const aggregate=await db.prepare(`SELECT count(*) count,avg(factor) score FROM attempt_answers WHERE attempt_id=?`).bind(row.attempt_id).first<{count:number;score:number}>();
   const completed=aggregate?.count===3;
-  const publicResultId=completed?createPublicResultId():null;
-  if(completed)await db.prepare(`UPDATE attempts SET completed_at=CURRENT_TIMESTAMP,score=?,public_id=? WHERE id=? AND completed_at IS NULL`).bind(aggregate.score,publicResultId,row.attempt_id).run();
-  return {position,guess,answer:row.answer,factor,explanation:row.explanation,completed,score:completed?aggregate!.score:null,publicResultId};
+  if(completed)await db.prepare(`UPDATE attempts SET completed_at=CURRENT_TIMESTAMP,score=? WHERE id=? AND completed_at IS NULL`).bind(aggregate.score,row.attempt_id).run();
+  return {position,guess,answer:row.answer,factor,explanation:row.explanation,sourceLabel:row.source_label,sourceUrl:row.source_url,napkinMath:row.napkin_math,completed,score:completed?aggregate!.score:null};
 }

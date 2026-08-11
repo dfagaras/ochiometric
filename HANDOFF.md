@@ -51,7 +51,13 @@ receive a combined multiplier. A perfect score is `1x`; lower is better.
 - Anonymous aggregate score submission to `/api/results`.
 - Cloudflare D1 `results` table and Drizzle schema/migration.
 - Cloudflare D1 `puzzles` and `questions` tables for editions, publication
-  dates, lifecycle status, ordered prompts, answers, units, and explanations.
+  dates, lifecycle status, ordered prompts, answers, units, explanations,
+  source links, and estimation guides.
+- Ten serious Romanian editions (30 sourced questions) scheduled for
+  12–21 August 2026; the calendar is documented in
+  `content/QUESTION_SCHEDULE.md`.
+- An expandable **Calcul ochiometric** section after each locked answer, with a
+  three-step back-of-the-envelope estimate and source link.
 - Local D1 migration and idempotent development-seed commands, plus a
   server-only repository for selecting the published puzzle by date.
 - Durable anonymous identity in a secure, HTTP-only cookie and one resumable
@@ -61,11 +67,16 @@ receive a combined multiplier. A perfect score is `1x`; lower is better.
 
 ## Prototype limitations
 
-- The three launch questions are still prototype content, although the play flow
-  and archive now read puzzle content and status from D1.
+- The archive rows are still hardcoded prototype content instead of the D1
+  puzzle calendar.
+- Local history uses the legacy key `din-ochi-history`.
+- Replaying or opening previous puzzles is not implemented.
+- Shareable result URLs and server-rendered share cards are not implemented.
+- There is no question-management or moderation workflow.
+- There is no abuse or rate-limit protection yet.
 - Accessibility and browser coverage need a dedicated QA pass.
-- The current questions are private-group prototype jokes and should be replaced
-  with broader launch content before public promotion.
+- Edition 1 contains the requested fictional private-group questions. Editions
+  2–11 use broader, sourced Romanian data.
 
 ## Recommended implementation order
 

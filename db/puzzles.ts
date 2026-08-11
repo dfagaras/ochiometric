@@ -7,6 +7,9 @@ export type DailyQuestion = {
   answer: number;
   unit: string;
   explanation: string;
+  sourceLabel: string;
+  sourceUrl: string;
+  napkinMath: string;
 };
 
 export type DailyPuzzle = {
@@ -28,6 +31,9 @@ type PuzzleRow = {
   answer: number;
   unit: string;
   explanation: string;
+  source_label: string;
+  source_url: string;
+  napkin_math: string;
 };
 
 type D1Statement = {
@@ -50,7 +56,10 @@ const publishedPuzzleQuery = `
     q.prompt,
     q.answer,
     q.unit,
-    q.explanation
+    q.explanation,
+    q.source_label,
+    q.source_url,
+    q.napkin_math
   FROM puzzles p
   JOIN questions q ON q.puzzle_id = p.id
   WHERE p.publish_date = ? AND p.status = 'published'
@@ -85,6 +94,9 @@ export async function getPublishedPuzzleByDate(
       answer: row.answer,
       unit: row.unit,
       explanation: row.explanation,
+      sourceLabel: row.source_label,
+      sourceUrl: row.source_url,
+      napkinMath: row.napkin_math,
     })),
   };
 }

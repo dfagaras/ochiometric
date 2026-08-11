@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "6f1aa8f2-36ac-4f37-a680-4218e4fdcfea",
-  "prevId": "5d7415e8-c890-4717-8329-9a95b6b5c2ee",
+  "id": "730ffe82-4207-41c2-bd17-2a2bb2a01156",
+  "prevId": "9773956d-b87e-4f8c-a78d-25d9c2b5de48",
   "tables": {
     "anonymous_players": {
       "name": "anonymous_players",
@@ -389,6 +389,14 @@
         },
         "source_url": {
           "name": "source_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "napkin_math": {
+          "name": "napkin_math",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
