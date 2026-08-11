@@ -36,6 +36,41 @@
       "when": 1786480909644,
       "tag": "0004_publish_2026_08_11",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1786481651991,
+      "tag": "0005_add_question_sources",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1786481664226,
+      "tag": "0006_schedule_10_days",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1786481797803,
+      "tag": "0007_add_napkin_math",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1786481804087,
+      "tag": "0008_add_napkin_guides",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1786482200000,
+      "tag": "0009_today_napkin_guides",
+      "breakpoints": true
     }
   ]
 }
