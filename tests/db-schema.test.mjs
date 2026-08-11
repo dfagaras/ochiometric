@@ -16,6 +16,8 @@ const migrations = [
   "../drizzle/0001_*.sql",
   "../drizzle/0002_*.sql",
   "../drizzle/0003_*.sql",
+  "../drizzle/0005_*.sql",
+  "../drizzle/0007_*.sql",
 ];
 
 async function migrationSql(pattern) {
@@ -153,6 +155,36 @@ test("șterge întrebările când puzzle-ul este șters", async () => {
     .prepare("SELECT count(*) AS count FROM questions")
     .get();
   assert.equal(count, 0);
+  database.close();
+});
+
+test("calendarul public conține 10 zile, 30 de surse și calcule ochiometrice", async () => {
+  const database = await migratedDatabase();
+  for (const migration of ["../drizzle/0006_*.sql", "../drizzle/0008_*.sql"]) {
+    const sql = await migrationSql(migration);
+    database.exec(sql.replaceAll("--> statement-breakpoint", ""));
+  }
+
+  const totals = database.prepare(`
+    SELECT
+      count(DISTINCT p.id) AS puzzles,
+      count(q.id) AS questions,
+      count(NULLIF(q.source_url, '')) AS sourced,
+      count(NULLIF(q.napkin_math, '')) AS explained
+    FROM puzzles p
+    JOIN questions q ON q.puzzle_id = p.id
+    WHERE p.edition BETWEEN 2 AND 11
+  `).get();
+  assert.deepEqual({ ...totals }, {
+    puzzles: 10,
+    questions: 30,
+    sourced: 30,
+    explained: 30,
+  });
+  assert.deepEqual(
+    { ...database.prepare("SELECT min(publish_date) AS first, max(publish_date) AS last FROM puzzles WHERE edition BETWEEN 2 AND 11").get() },
+    { first: "2026-08-12", last: "2026-08-21" },
+  );
   database.close();
 });
 
