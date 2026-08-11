@@ -56,14 +56,14 @@ function chartMarkup(result: PublicResult) {
   const maximum = Math.max(1, ...result.bins);
   const baseline = 495;
   const bars = result.bins.map((count, index) => {
-    const height = Math.max(count ? 10 : 3, count / maximum * 118);
+    const height = Math.max(count ? 8 : 3, count / maximum * 78);
     return `<rect x="${72 + index * 19}" y="${baseline - height}" width="15" height="${height}" rx="4" fill="${colors.chart}" fill-opacity=".72"/>`;
   }).join("");
   const markerX = 72 + Math.min(25, Math.max(0, Math.floor(Math.log10(Math.max(1, result.score)) / 3 * 26))) * 19 + 7;
   return `${bars}
-    <line x1="${markerX}" y1="418" x2="${markerX}" y2="500" stroke="${colors.ink}" stroke-width="4"/>
-    <rect x="${markerX - 28}" y="394" width="56" height="34" rx="9" fill="${colors.ink}"/>
-    <text x="${markerX}" y="418" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="16" font-weight="900">TU</text>
+    <line x1="${markerX}" y1="429" x2="${markerX}" y2="500" stroke="${colors.ink}" stroke-width="4"/>
+    <rect x="${markerX - 28}" y="405" width="56" height="34" rx="9" fill="${colors.ink}"/>
+    <text x="${markerX}" y="429" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="16" font-weight="900">TU</text>
     <line x1="72" y1="500" x2="574" y2="500" stroke="${colors.ink}" stroke-opacity=".45"/>
     <text x="72" y="530" fill="${colors.ink}" font-family="Arial,sans-serif" font-size="17" font-weight="700">1×</text>
     <text x="235" y="530" fill="${colors.ink}" font-family="Arial,sans-serif" font-size="17" font-weight="700">10×</text>
