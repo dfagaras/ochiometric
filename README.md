@@ -16,12 +16,15 @@ own Romanian branding, copy, colors, assets, and implementation.
 - device-local archive stored in `localStorage`
 - anonymous aggregate result storage in Cloudflare D1
 - D1 schema for scheduled daily puzzles and their ordered questions
+- 10 sourced Romanian editions scheduled for 12–21 August 2026
+- post-answer explanations, source links, and expandable estimation guides
 - secure anonymous player identity and resumable server-side attempt records
 - native Web Share API support with clipboard fallback
 - mobile-first responsive interface
 
-The current edition and questions are hardcoded prototype content. See
-[`HANDOFF.md`](HANDOFF.md) for product state and priorities.
+Daily content is stored in D1 and published through versioned migrations. See
+[`content/QUESTION_SCHEDULE.md`](content/QUESTION_SCHEDULE.md) for the current
+calendar and [`HANDOFF.md`](HANDOFF.md) for product state and priorities.
 
 ## Stack
 
