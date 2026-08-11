@@ -67,13 +67,6 @@ receive a combined multiplier. A perfect score is `1x`; lower is better.
 
 ## Prototype limitations
 
-- The archive rows are still hardcoded prototype content instead of the D1
-  puzzle calendar.
-- Local history uses the legacy key `din-ochi-history`.
-- Replaying or opening previous puzzles is not implemented.
-- Shareable result URLs and server-rendered share cards are not implemented.
-- There is no question-management or moderation workflow.
-- There is no abuse or rate-limit protection yet.
 - Accessibility and browser coverage need a dedicated QA pass.
 - Edition 1 contains the requested fictional private-group questions. Editions
   2–11 use broader, sourced Romanian data.
@@ -97,7 +90,11 @@ receive a combined multiplier. A perfect score is `1x`; lower is better.
 8. **In progress:** PWA metadata, offline shell behavior, aggregate analytics,
    rate limiting, and automated coverage are implemented. Complete the full
    accessibility/responsive browser QA pass.
-9. Connect the selected custom domain after acceptance testing.
+9. Add a protected `/admin/statistici` dashboard backed by D1. It should show
+   puzzle starts, completed attempts, completion rate, average and best score,
+   7/30-day trends, and share actions. Counts represent anonymous browser
+   identities/devices, not authenticated people; no personal data is required.
+10. Connect the selected custom domain after acceptance testing.
 
 ## Definition of done for the first public beta
 
