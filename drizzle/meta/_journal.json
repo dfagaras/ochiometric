@@ -29,6 +29,27 @@
       "when": 1786476660319,
       "tag": "0003_polite_blink",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1786481365610,
+      "tag": "0004_burly_vivisector",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1786481953944,
+      "tag": "0005_tiny_black_crow",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1786482763395,
+      "tag": "0006_tan_giant_man",
+      "breakpoints": true
     }
   ]
 }

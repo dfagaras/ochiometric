@@ -96,6 +96,7 @@ export const attempts = sqliteTable(
     startedAt: text("started_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     completedAt: text("completed_at"),
     score: real("score"),
+    publicId: text("public_id"),
   },
   (table) => [
     uniqueIndex("attempts_player_puzzle_unique").on(
@@ -103,6 +104,7 @@ export const attempts = sqliteTable(
       table.puzzleId,
     ),
     index("attempts_puzzle_idx").on(table.puzzleId),
+    uniqueIndex("attempts_public_id_unique").on(table.publicId),
     check(
       "attempts_completion_valid",
       sql`(${table.completedAt} IS NULL AND ${table.score} IS NULL) OR (${table.completedAt} IS NOT NULL AND ${table.score} >= 1)`,
@@ -124,6 +126,56 @@ export const attemptAnswers = sqliteTable(
     uniqueIndex("attempt_answers_attempt_question_unique").on(table.attemptId, table.questionId),
     check("attempt_answers_guess_positive", sql`${table.guess} > 0`),
     check("attempt_answers_factor_valid", sql`${table.factor} >= 1`),
+  ],
+);
+
+export const adminUsers = sqliteTable("admin_users", {
+  email: text("email").primaryKey(),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const puzzleAuditLog = sqliteTable(
+  "puzzle_audit_log",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    puzzleId: integer("puzzle_id").notNull().references(() => puzzles.id, { onDelete: "cascade" }),
+    adminEmail: text("admin_email").notNull().references(() => adminUsers.email),
+    action: text("action", { enum: ["created", "updated", "scheduled", "published", "archived"] }).notNull(),
+    details: text("details").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("puzzle_audit_log_puzzle_idx").on(table.puzzleId, table.createdAt),
+    check("puzzle_audit_log_action_valid", sql`${table.action} IN ('created', 'updated', 'scheduled', 'published', 'archived')`),
+  ],
+);
+
+export const dailyMetrics = sqliteTable(
+  "daily_metrics",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    day: text("day").notNull(),
+    event: text("event").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex("daily_metrics_day_event_unique").on(table.day, table.event),
+    check("daily_metrics_count_positive", sql`${table.count} >= 0`),
+  ],
+);
+
+export const rateLimitBuckets = sqliteTable(
+  "rate_limit_buckets",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    key: text("key").notNull(),
+    windowStart: integer("window_start").notNull(),
+    count: integer("count").notNull().default(1),
+  },
+  (table) => [
+    uniqueIndex("rate_limit_buckets_key_window_unique").on(table.key, table.windowStart),
+    index("rate_limit_buckets_window_idx").on(table.windowStart),
+    check("rate_limit_buckets_count_positive", sql`${table.count} > 0`),
   ],
 );
 

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Ochiometric">
+  <rect width="512" height="512" rx="112" fill="#17264a"/>
+  <path d="M0 0h171v28H0z" fill="#6f8fcf"/><path d="M171 0h171v28H171z" fill="#f3d477"/><path d="M342 0h170v28H342z" fill="#df6570"/>
+  <circle cx="256" cy="256" r="142" fill="#f3d477"/>
+  <circle cx="256" cy="256" r="71" fill="#17264a"/>
+  <circle cx="282" cy="230" r="22" fill="#fffdfa"/>
+  <path d="M118 394c76 54 200 54 276 0" fill="none" stroke="#df6570" stroke-width="28" stroke-linecap="round"/>
+</svg>
