@@ -15,6 +15,8 @@ own Romanian branding, copy, colors, assets, and implementation.
 - result distribution graph and percentile
 - device-local archive stored in `localStorage`
 - anonymous aggregate result storage in Cloudflare D1
+- D1 schema for scheduled daily puzzles and their ordered questions
+- secure anonymous player identity and resumable server-side attempt records
 - native Web Share API support with clipboard fallback
 - mobile-first responsive interface
 
@@ -40,8 +42,14 @@ Install and run:
 
 ```bash
 npm ci
+npm run db:seed:local
 npm run dev
 ```
+
+`db:seed:local` applies all D1 migrations to the local Miniflare database and
+loads an idempotent, public-safe development puzzle. It never targets the remote
+Sites database. Production continues to receive its `DB` binding from
+`.openai/hosting.json`.
 
 Validation:
 

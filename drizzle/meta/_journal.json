@@ -8,6 +8,27 @@
       "when": 1786438600431,
       "tag": "0000_supreme_thunderball",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1786475143624,
+      "tag": "0001_ordinary_paibok",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1786476247192,
+      "tag": "0002_smooth_sheva_callister",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1786476660319,
+      "tag": "0003_polite_blink",
+      "breakpoints": true
     }
   ]
 }

@@ -2,24 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-type Question = { text: string; answer: number; unit: string; hint: string };
+type Question = { position: number; prompt: string; unit: string };
+type Reveal = { position:number; guess:number; answer:number; factor:number; explanation:string; completed:boolean; score:number|null };
 type SavedGame = { no: number; date: string; score: number; factors: number[] };
 type View = "home" | "play" | "result" | "archive" | "about";
+type Statistics = { participantCount:number; topPercent:number; bins:number[]; playerScore:number };
 
-const questions: Question[] = [
-  { text: "Câți bărbați a avut mama lui Gabriel?", answer: 100000, unit: "bărbați", hint: "O glumă fictivă de proporții istorice: răspunsul oficial este 100.000." },
-  { text: "Cu câți bărbați s-a mozolit Sebi?", answer: 69, unit: "bărbați", hint: "Un număr suspect de memorabil. Răspunsul oficial al glumei este 69." },
-  { text: "De câte ori i-a spus socrul lui Tudi că Transilvania nu este România?", answer: 1000000, unit: "ori", hint: "Suficient de des încât grupul a rotunjit numărul la exact un milion." },
-];
-
-const seededFactors = [1.04,1.08,1.11,1.18,1.21,1.3,1.42,1.55,1.7,1.9,2.1,2.4,2.8,3.2,3.7,4.3,5.1,6.2,7.5,9,11,14,18,23,31,43,65,90,140,250,620];
-
-function factor(guess: number, answer: number) { return Math.max(guess / answer, answer / guess); }
 function fmt(n: number) { return new Intl.NumberFormat("ro-RO", { maximumFractionDigits: 2 }).format(n); }
 function scoreFmt(n: number) { return `${n < 10 ? n.toFixed(2) : n.toFixed(1)}×`; }
 
-function Distribution({ score }: { score: number }) {
-  const heights = [28,48,69,88,96,89,78,68,59,50,42,35,29,25,22,19,17,15,13,12,14,16,12,7,3,1];
+function Distribution({ score, bins }: { score: number; bins: number[] }) {
+  const maximum=Math.max(1,...bins); const heights=bins.map(count=>Math.max(count?4:1,count/maximum*100));
   const pos = Math.min(98, Math.max(2, Math.log10(Math.max(1, score)) / 3 * 100));
   return <div className="distribution" aria-label={`Poziția ta în distribuție: ${scoreFmt(score)}`}>
     <div className="you-marker" style={{ left: `${pos}%` }}><span>TU</span></div>
@@ -34,17 +27,17 @@ function Header({onMenu,onBack,back=false}: {onMenu:()=>void;onBack:()=>void;bac
 
 export default function Home() {
   const [view,setView]=useState<View>("home"); const [menu,setMenu]=useState(false);
-  const [q,setQ]=useState(0); const [input,setInput]=useState(""); const [guesses,setGuesses]=useState<number[]>([]);
-  const [revealed,setRevealed]=useState(false); const [history,setHistory]=useState<SavedGame[]>([]);
+  const [q,setQ]=useState(0); const [input,setInput]=useState(""); const [questions,setQuestions]=useState<Question[]>([]); const [reveals,setReveals]=useState<Reveal[]>([]);
+  const [revealed,setRevealed]=useState(false); const [history,setHistory]=useState<SavedGame[]>([]); const [gameError,setGameError]=useState(""); const [busy,setBusy]=useState(false); const [statistics,setStatistics]=useState<Statistics|null>(null);
   useEffect(()=>{ const timer=setTimeout(()=>{ try { setHistory(JSON.parse(localStorage.getItem("din-ochi-history")||"[]")); } catch{} },0); return()=>clearTimeout(timer); },[]);
-  const factors=useMemo(()=>guesses.map((g,i)=>factor(g,questions[i].answer)),[guesses]);
+  const factors=useMemo(()=>reveals.map(x=>x.factor),[reveals]);
   const dailyScore=factors.length ? factors.reduce((a,b)=>a+b,0)/factors.length : 1;
-  const percentile=Math.max(1,Math.round(seededFactors.filter(x=>x<=dailyScore).length/seededFactors.length*100));
-  function submit(){ const value=Number(input.replace(/[^0-9.]/g,"")); if(!value||value<=0)return; setGuesses([...guesses,value]); setRevealed(true); }
-  function next(){ if(q<2){setQ(q+1);setInput("");setRevealed(false)} else { const game={no:1,date:new Date().toISOString(),score:dailyScore,factors}; const next=[game,...history.filter(h=>h.no!==1)];setHistory(next);localStorage.setItem("din-ochi-history",JSON.stringify(next)); setView("result"); postResult(dailyScore); } }
-  async function postResult(score:number){try{await fetch("/api/results",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({score})})}catch{}}
-  function restart(){setQ(0);setInput("");setGuesses([]);setRevealed(false);setView("play")}
-  async function share(){const url="https://din-ochi.dragosfagaras.chatgpt.site"; const text=`Ochiometric #001 — ${scoreFmt(dailyScore)} · Top ${percentile}%\nMă bați?`; if(navigator.share) await navigator.share({title:"Ochiometric",text,url}); else await navigator.clipboard.writeText(`${text}\n${url}`);}
+  const percentile=statistics?.topPercent;
+  async function loadStatistics(){const response=await fetch("/api/puzzles/today/statistics");if(response.ok){const data=await response.json() as {statistics:Statistics};setStatistics(data.statistics)}}
+  async function submit(){ const value=Number(input.replace(/[^0-9.]/g,"")); if(!Number.isFinite(value)||value<=0||busy)return; setBusy(true);setGameError("");try{const response=await fetch("/api/attempts/answer",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({position:q+1,guess:value})});const data=await response.json() as {reveal?:Reveal;error?:string};if(!response.ok||!data.reveal)throw new Error(data.error||"Estimarea nu a putut fi blocată.");setReveals([...reveals,data.reveal]);setRevealed(true)}catch(error){setGameError(error instanceof Error?error.message:"A apărut o eroare.")}finally{setBusy(false)} }
+  function next(){ if(q<2){setQ(q+1);setInput("");setRevealed(false)} else { const game={no:1,date:new Date().toISOString(),score:dailyScore,factors}; const next=[game,...history.filter(h=>h.no!==1)];setHistory(next);localStorage.setItem("din-ochi-history",JSON.stringify(next)); setView("result");void loadStatistics(); } }
+  async function restart(){setQ(0);setInput("");setReveals([]);setQuestions([]);setStatistics(null);setRevealed(false);setGameError("");setView("play");setBusy(true);try{const attemptResponse=await fetch("/api/attempts",{method:"POST"});const attemptData=await attemptResponse.json() as {attempt?:{completedAt:string|null;answers:Array<Omit<Reveal,"completed"|"score">>};error?:string};if(!attemptResponse.ok||!attemptData.attempt)throw new Error(attemptData.error||"Jocul de azi nu este disponibil.");const response=await fetch("/api/puzzles/today");const data=await response.json() as {puzzle?:{questions:Question[]};error?:string};if(!response.ok||!data.puzzle)throw new Error(data.error||"Jocul nu a putut fi încărcat.");const saved=attemptData.attempt.answers.map(answer=>({...answer,completed:false,score:null}));setQuestions(data.puzzle.questions);setReveals(saved);if(attemptData.attempt.completedAt){setView("result");await loadStatistics()}else{setQ(saved.length);setRevealed(false)}}catch(error){setGameError(error instanceof Error?error.message:"A apărut o eroare.")}finally{setBusy(false)}}
+  async function share(){const url="https://din-ochi.dragosfagaras.chatgpt.site"; const text=`Ochiometric #001 — ${scoreFmt(dailyScore)}${percentile?` · Top ${percentile}%`:""}\nMă bați?`; if(navigator.share) await navigator.share({title:"Ochiometric",text,url}); else await navigator.clipboard.writeText(`${text}\n${url}`);}
 
   return <main className={`app view-${view}`}>
     <div className={`drawer-shade ${menu?"open":""}`} onClick={()=>setMenu(false)} />
@@ -55,9 +48,9 @@ export default function Home() {
       <div className="dots"><b>1</b><b>2</b><b>3</b></div><button className="primary" onClick={restart}>JOACĂ AZI <span>→</span></button><small>11 AUGUST 2026 · DUREAZĂ 3 MINUTE</small>
     </section><section className="intro"><span>CUM SE JOACĂ</span><h2>Nu trebuie să știi.<br/>Trebuie să te apropii.</h2><div className="steps"><article><b>01</b><h3>Estimează</h3><p>Dă cel mai bun răspuns al tău.</p></article><article><b>02</b><h3>Compară</h3><p>Vezi răspunsul și explicația.</p></article><article><b>03</b><h3>Provoacă</h3><p>Trimite scorul prietenilor.</p></article></div></section></>}
 
-    {view==="play"&&<><Header onMenu={()=>setMenu(true)} onBack={()=>setView("home")} back/><section className="play-card card"><div className="progress"><span>ÎNTREBAREA {q+1} DIN 3</span><div><i style={{width:`${((q+(revealed?1:0))/3)*100}%`}}/></div></div><h2>{questions[q].text}</h2>{!revealed?<><label>ESTIMAREA TA</label><div className="guess"><input inputMode="decimal" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="0" autoFocus/><span>{questions[q].unit}</span></div><p className="micro">Nu căuta. Ai încredere în instinct.</p><button className="primary" onClick={submit}>BLOCHEAZĂ RĂSPUNSUL</button></>:<div className="reveal"><div className="compare"><article><small>AI SPUS</small><b>{fmt(guesses[q])}</b></article><article><small>RĂSPUNS</small><b>{fmt(questions[q].answer)}</b></article></div><div className="factor"><b>{scoreFmt(factors[q])}</b><span>{guesses[q]>questions[q].answer?"PREA MULT ↑":"PREA PUȚIN ↓"}</span></div><div className="napkin"><small>CALCUL OCHIOMETRIC</small><p>{questions[q].hint}</p></div><button className="primary" onClick={next}>{q<2?"URMĂTOAREA ÎNTREBARE":"VEZI SCORUL"} →</button></div>}</section></>}
+    {view==="play"&&<><Header onMenu={()=>setMenu(true)} onBack={()=>setView("home")} back/><section className="play-card card">{gameError&&<p role="alert">{gameError}</p>}{!questions[q]?<p>{busy?"Se încarcă jocul de azi…":"Jocul nu este disponibil."}</p>:<><div className="progress"><span>ÎNTREBAREA {q+1} DIN 3</span><div><i style={{width:`${((q+(revealed?1:0))/3)*100}%`}}/></div></div><h2>{questions[q].prompt}</h2>{!revealed?<><label htmlFor="guess">ESTIMAREA TA</label><div className="guess"><input id="guess" inputMode="decimal" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="0" autoFocus/><span>{questions[q].unit}</span></div><p className="micro">Nu căuta. Ai încredere în instinct.</p><button className="primary" disabled={busy} onClick={submit}>{busy?"SE BLOCHEAZĂ…":"BLOCHEAZĂ RĂSPUNSUL"}</button></>:<div className="reveal"><div className="compare"><article><small>AI SPUS</small><b>{fmt(reveals[q].guess)}</b></article><article><small>RĂSPUNS</small><b>{fmt(reveals[q].answer)}</b></article></div><div className="factor"><b>{scoreFmt(reveals[q].factor)}</b><span>{reveals[q].guess>reveals[q].answer?"PREA MULT ↑":"PREA PUȚIN ↓"}</span></div><div className="napkin"><small>CALCUL OCHIOMETRIC</small><p>{reveals[q].explanation}</p></div><button className="primary" onClick={next}>{q<2?"URMĂTOAREA ÎNTREBARE":"VEZI SCORUL"} →</button></div>}</>}</section></>}
 
-    {view==="result"&&<><Header onMenu={()=>setMenu(true)} onBack={()=>setView("home")} back/><section className="results card"><span className="eyebrow">SCORUL TĂU DE AZI</span><div className="big-score">{scoreFmt(dailyScore)}</div><b className="rank">TOP {percentile}%</b><h3>CUM S-AU DESCURCAT TOȚI</h3><Distribution score={dailyScore}/><h3>ÎNTREBĂRI</h3><div className="question-results">{questions.map((x,i)=><article key={x.text}><p>{x.text}</p><b>{guesses[i]>x.answer?">":"<"} {scoreFmt(factors[i])}</b></article>)}</div><button className="primary dark" onClick={share}>DISTRIBUIE REZULTATUL</button><button className="secondary" onClick={()=>setView("archive")}>VEZI ARHIVA</button></section></>}
+    {view==="result"&&<><Header onMenu={()=>setMenu(true)} onBack={()=>setView("home")} back/><section className="results card"><span className="eyebrow">SCORUL TĂU DE AZI</span><div className="big-score">{scoreFmt(statistics?.playerScore??dailyScore)}</div>{percentile&&<b className="rank">TOP {percentile}%</b>}<h3>CUM S-AU DESCURCAT TOȚI</h3>{statistics?<><Distribution score={statistics.playerScore} bins={statistics.bins}/><p>{statistics.participantCount===1?"Ești primul rezultat de azi.":`${statistics.participantCount} jucători au terminat jocul de azi.`}</p></>:<p>Se încarcă distribuția reală…</p>}<h3>ÎNTREBĂRI</h3><div className="question-results">{questions.map((x,i)=><article key={x.position}><p>{x.prompt}</p><b>{reveals[i].guess===reveals[i].answer?"=":reveals[i].guess>reveals[i].answer?">":"<"} {scoreFmt(reveals[i].factor)}</b></article>)}</div><button className="primary dark" onClick={share}>DISTRIBUIE REZULTATUL</button><button className="secondary" onClick={()=>setView("archive")}>VEZI ARHIVA</button></section></>}
 
     {view==="archive"&&<><Header onMenu={()=>setMenu(true)} onBack={()=>setView("home")} back/><section className="archive"><span className="eyebrow">ISTORICUL TĂU</span><h1>Arhivă</h1><p>Toate provocările Ochiometric, de la prima zi.</p><div className="stats"><article><small>JOCURI</small><b>{history.length} / 7</b></article><article><small>SCOR MEDIU</small><b>{history.length?scoreFmt(history.reduce((a,b)=>a+b.score,0)/history.length):"—"}</b></article><article><small>CEA MAI BUNĂ ZI</small><b>{history.length?scoreFmt(Math.min(...history.map(h=>h.score))):"—"}</b></article></div><div className="filters"><b>TOATE</b><span>TERMINATE</span><span>DE JUCAT</span></div><div className="archive-list">{[1,2,3,4,5,6,7].map((no,i)=>{const played=history.find(h=>h.no===no);return <article key={no}><small>{String(no).padStart(3,"0")}</small><div><b>{i===0?"11 aug. · azi":`${11-i} aug.`}</b><span>{["Mar","Lun","Dum","Sâm","Vin","Joi","Mie"][i]}</span></div><strong className={played?"good":""}>{played?scoreFmt(played.score):"—"}</strong><button onClick={i===0?restart:undefined}>{played?"TERMINAT ✓":"ÎN CURÂND"}</button></article>})}</div></section></>}
 

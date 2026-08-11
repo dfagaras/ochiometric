@@ -43,35 +43,38 @@ receive a combined multiplier. A perfect score is `1x`; lower is better.
 - Device-local completed-game history in `localStorage`.
 - Anonymous aggregate score submission to `/api/results`.
 - Cloudflare D1 `results` table and Drizzle schema/migration.
+- Cloudflare D1 `puzzles` and `questions` tables for editions, publication
+  dates, lifecycle status, ordered prompts, answers, units, and explanations.
+- Local D1 migration and idempotent development-seed commands, plus a
+  server-only repository for selecting the published puzzle by date.
+- Durable anonymous identity in a secure, HTTP-only cookie and one resumable
+  server-side attempt record per player and published puzzle.
 - Responsive layout for mobile and desktop.
 - Public OpenAI Sites deployment.
 
 ## Prototype limitations
 
-- The edition number, date, questions, answers, explanations, and archive rows
-  are hardcoded.
+- The play flow still reads its edition, date, questions, answers, explanations,
+  and archive rows from hardcoded prototype content instead of the new D1 model.
 - Local history uses the legacy key `din-ochi-history`.
-- The result graph uses seeded placeholder distribution data rather than the D1
-  data already exposed by `GET /api/results`.
-- Percentile calculation is based on the seeded data.
 - Replaying or opening previous puzzles is not implemented.
 - Shareable result URLs and server-rendered share cards are not implemented.
 - There is no question-management or moderation workflow.
-- There is no stable anonymous player identifier or abuse/rate protection.
+- There is no abuse or rate-limit protection yet.
 - Accessibility and browser coverage need a dedicated QA pass.
 - The current questions are private-group prototype jokes and should be replaced
   with broader launch content before public promotion.
 
 ## Recommended implementation order
 
-1. Model daily puzzles and questions in D1, including publish date, edition,
-   answer, unit, explanation, and status.
-2. Add a durable anonymous player ID stored in a secure cookie and persist
-   attempts server-side while keeping account creation optional.
-3. Make scoring authoritative on the server so answers are not exposed before a
-   guess and duplicate result submissions are prevented.
-4. Replace seeded graph data with real daily score distribution and percentile
-   calculations.
+1. **Completed:** Model daily puzzles and questions in D1, including publish
+   date, edition, answer, unit, explanation, and status.
+2. **Completed:** Add a durable anonymous player ID stored in a secure cookie
+   and persist attempts server-side while keeping account creation optional.
+3. **Completed:** Make scoring authoritative on the server so answers are not
+   exposed before a guess and duplicate result submissions are prevented.
+4. **Completed:** Replace seeded graph data with real daily score distribution
+   and percentile calculations.
 5. Implement archive routes and replay behavior for published puzzles.
 6. Add stable public result routes and generated social share cards.
 7. Add a protected question-management workflow with validation and moderation.
